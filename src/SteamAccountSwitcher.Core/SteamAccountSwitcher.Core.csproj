@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Must not reference the Playnite SDK: this layer is meant to survive the port to Playnite 11. -->
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <RootNamespace>SteamAccountSwitcher.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SteamAccountSwitcher.Core.Tests" />
+  </ItemGroup>
+</Project>

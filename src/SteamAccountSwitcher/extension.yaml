@@ -1,0 +1,10 @@
+Id: SteamAccountSwitcher_386277e5-4f8d-4979-bf1f-09b635195a7b
+Name: Steam Account Switcher
+Author: SQ1KW Chris
+Version: 0.1.0
+Module: SteamAccountSwitcher.dll
+Type: GenericPlugin
+Icon: icon.png
+Links:
+  - Name: GitHub
+    Url: https://github.com/b4sh/playnite-steam-account-switcher

@@ -1,0 +1,49 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCSAS_PluginName">Steam Account Switcher</sys:String>
+    <sys:String x:Key="LOCSAS_UnknownAccount">(unknown account)</sys:String>
+    <sys:String x:Key="LOCSAS_NoRememberedPassword">Password not remembered – log in once in Steam with "Remember me" checked</sys:String>
+    <sys:String x:Key="LOCSAS_NoRememberedPasswordShort">password not remembered</sys:String>
+    <sys:String x:Key="LOCSAS_AccountMissing">account not found in Steam</sys:String>
+
+    <!-- Game context menu -->
+    <sys:String x:Key="LOCSAS_MenuSection">Steam account</sys:String>
+    <sys:String x:Key="LOCSAS_MenuUseDefault">Use default account</sys:String>
+    <sys:String x:Key="LOCSAS_MenuNoAccounts">No Steam accounts found</sys:String>
+    <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">No accounts were found in Steam's loginusers.vdf. Log in to each account in Steam once, or set the Steam path in the add-on settings.</sys:String>
+
+    <!-- Launch -->
+    <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam is logged in as {0}. Switch to {1}? Steam will restart.</sys:String>
+    <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">On account {0} the game "{1}" is running. Closing Steam to switch to {2} will end it. Continue?</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressSwitching">Switching Steam to {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressShuttingDown">Closing Steam (Steam Cloud sync may take a while)…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressStarting">Starting Steam as {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressWaitingForLogin">Waiting for Steam to log in as {0}…</sys:String>
+
+    <!-- Errors -->
+    <sys:String x:Key="LOCSAS_ErrorSteamNotFound">Steam installation was not found. Set the Steam path in the add-on settings.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorUnknownAccount">The account "{0}" assigned to this game is not known to Steam. Log in to it in Steam once, or assign another account.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorShutdownTimeout">Steam did not close within {0} s (Steam Cloud may still be syncing). Steam was left running; try starting the game again in a moment.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorLoginTimeout">Steam did not log in as "{0}". Steam probably needs the password or a Steam Guard code: log in manually with "Remember me" checked, then start the game again.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorWrongAccount">Steam logged into a different account than "{0}". Game start was cancelled.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorUnexpected">Switching the Steam account failed: {0}</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorStoreCorrupt">Steam Account Switcher: the account assignments file was damaged and has been moved to {0}. Assignments were reset.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorStoreSave">Saving account assignments failed: {0}</sys:String>
+
+    <!-- Settings -->
+    <sys:String x:Key="LOCSAS_SettingsSteamPath">Steam folder (leave empty to detect automatically):</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDetectedPath">Using:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsSteamNotFound">Steam not found</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDefaultAccount">Default account for games without an assigned account:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsNoDefaultAccount">(none – do nothing)</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsAskBeforeSwitch">Ask before switching the Steam account</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsLaunchArguments">Steam launch arguments:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsShutdownTimeout">Steam shutdown timeout [s]:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsLoginTimeout">Steam login timeout [s]:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsShutdownNote">Steam is always closed gracefully so Steam Cloud can finish syncing; it is never killed.</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDetectedAccounts">Detected Steam accounts:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsRefreshAccounts">Refresh account list</sys:String>
+    <sys:String x:Key="LOCSAS_ValidationTimeout">Timeouts must be between 5 and 600 seconds.</sys:String>
+    <sys:String x:Key="LOCSAS_ValidationLoginArgument">Launch arguments must not contain -login: the add-on never passes credentials to Steam.</sys:String>
+</ResourceDictionary>
