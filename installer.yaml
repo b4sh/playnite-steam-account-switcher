@@ -1,0 +1,14 @@
+# Playnite installer manifest (https://github.com/JosefNemec/PlayniteAddonDatabase#installer-manifest).
+# Add a new package entry at the top for every release.
+AddonId: 'SteamAccountSwitcher_386277e5-4f8d-4979-bf1f-09b635195a7b'
+Packages:
+  - Version: 1.0.0
+    RequiredApiVersion: 6.18.0
+    ReleaseDate: 2026-10-17
+    PackageUrl: https://github.com/b4sh/playnite-steam-account-switcher/releases/download/v1.0.0/SteamAccountSwitcher_386277e5-4f8d-4979-bf1f-09b635195a7b_1_0_0.pext
+    Changelog:
+      - First release.
+      - Per-game Steam account, switched only when needed, without passwords.
+      - Steam is always closed gracefully (steam.exe -shutdown) so Steam Cloud can finish syncing.
+      - Keep waiting / cancel when closing Steam or logging in takes longer than the timeout.
+      - Top panel item with the logged-in account and manual switching.

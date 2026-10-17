@@ -491,3 +491,4 @@ $RECYCLE.BIN/
 
 # Release packages
 /dist/
+/addon-database/
