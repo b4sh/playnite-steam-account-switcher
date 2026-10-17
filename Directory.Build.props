@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
+    <Authors>SQ1KW Chris</Authors>
+    <Deterministic>true</Deterministic>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Lets `dotnet build` target net462 without the .NET Framework developer pack. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

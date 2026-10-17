@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{729236F2-E8CB-46D7-AE09-2576560BC75F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamAccountSwitcher.Core", "src\SteamAccountSwitcher.Core\SteamAccountSwitcher.Core.csproj", "{C227D965-8048-4AF4-ABF2-2388FDDA4E08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2B2522E8-A6BE-4A58-84D3-C98BE2E02ED2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamAccountSwitcher.Core.Tests", "tests\SteamAccountSwitcher.Core.Tests\SteamAccountSwitcher.Core.Tests.csproj", "{FF37FCA9-F8B1-46C8-8079-080F01B35802}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C227D965-8048-4AF4-ABF2-2388FDDA4E08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C227D965-8048-4AF4-ABF2-2388FDDA4E08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C227D965-8048-4AF4-ABF2-2388FDDA4E08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C227D965-8048-4AF4-ABF2-2388FDDA4E08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF37FCA9-F8B1-46C8-8079-080F01B35802}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF37FCA9-F8B1-46C8-8079-080F01B35802}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF37FCA9-F8B1-46C8-8079-080F01B35802}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF37FCA9-F8B1-46C8-8079-080F01B35802}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C227D965-8048-4AF4-ABF2-2388FDDA4E08} = {729236F2-E8CB-46D7-AE09-2576560BC75F}
+		{FF37FCA9-F8B1-46C8-8079-080F01B35802} = {2B2522E8-A6BE-4A58-84D3-C98BE2E02ED2}
+	EndGlobalSection
+EndGlobal
