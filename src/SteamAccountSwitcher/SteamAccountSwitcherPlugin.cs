@@ -25,6 +25,10 @@ namespace SteamAccountSwitcher
         private readonly ISteamEnvironment environment = new WindowsSteamEnvironment();
         private readonly GameAccountStore store;
         private readonly SteamAccountSwitcherSettingsViewModel settings;
+        private TopPanel topPanel;
+
+        /// <summary>1 while a game-start or manual switch runs; prevents parallel switches.</summary>
+        private int switching;
 
         public SteamAccountSwitcherPlugin(IPlayniteAPI api)
             : base(api)
@@ -38,6 +42,8 @@ namespace SteamAccountSwitcher
         public override Guid Id { get; } = Guid.Parse("386277e5-4f8d-4979-bf1f-09b635195a7b");
 
         internal AccountCache Accounts { get; }
+
+        internal bool IsSwitching => switching != 0;
 
         internal SteamInstallation LocateSteam() => SteamLocator.Locate(environment, settings.Settings.SteamPath);
 
@@ -56,7 +62,19 @@ namespace SteamAccountSwitcher
 
         public override void OnApplicationStopped(OnApplicationStoppedEventArgs args)
         {
+            topPanel?.Stop();
             Accounts.Dispose();
+        }
+
+        public override IEnumerable<TopPanelItem> GetTopPanelItems()
+        {
+            // Called on the UI thread; the item (and its WPF content) is created once.
+            if (topPanel == null)
+            {
+                topPanel = new TopPanel(this, environment);
+            }
+
+            yield return topPanel.Item;
         }
 
         public override ISettings GetSettings(bool firstRunSettings) => settings;
@@ -128,7 +146,7 @@ namespace SteamAccountSwitcher
         /// Menu headers treat "_" as an access-key marker and hide the first one (e.g. "_login_" shows as "login_");
         /// a doubled "__" renders as a literal underscore.
         /// </summary>
-        private static string EscapeAccessKeys(string text) => text?.Replace("_", "__");
+        internal static string EscapeAccessKeys(string text) => text?.Replace("_", "__");
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
         {
@@ -144,33 +162,64 @@ namespace SteamAccountSwitcher
                 return;
             }
 
+            var outcome = RunExclusive(target, game.Id, $"game='{game.Name}'");
+            if (outcome.Kind != LaunchOutcomeKind.Proceed)
+            {
+                args.CancelStartup = true;
+            }
+        }
+
+        /// <summary>Manual switch from the top panel (SPEC §7.4); same flow as a game start, without asking first.</summary>
+        internal void SwitchManually(string accountName)
+        {
+            RunExclusive(accountName, null, "manual");
+        }
+
+        /// <summary>
+        /// Runs one switch at a time, logs the outcome and shows errors. Returns Cancelled when another
+        /// switch is already running.
+        /// </summary>
+        private LaunchOutcome RunExclusive(string target, Guid? gameId, string source)
+        {
+            if (System.Threading.Interlocked.CompareExchange(ref switching, 1, 0) != 0)
+            {
+                Logger.Warn($"{source} target='{target}': another Steam switch is in progress.");
+                PlayniteApi.Dialogs.ShowMessage(ResourceProvider.GetString("LOCSAS_TopPanelSwitching"), ResourceProvider.GetString("LOCSAS_PluginName"));
+                return LaunchOutcome.Cancelled("another switch in progress");
+            }
+
             try
             {
-                var outcome = PrepareSteam(game.Name, game.Id, target);
-                Logger.Info($"game='{game.Name}' target='{target}' outcome={outcome}");
-                if (outcome.Kind == LaunchOutcomeKind.Proceed)
-                {
-                    return;
-                }
-
-                args.CancelStartup = true;
+                var outcome = PrepareSteam(gameId, target);
+                Logger.Info($"{source} target='{target}' outcome={outcome}");
                 if (outcome.Kind == LaunchOutcomeKind.Failed)
                 {
                     PlayniteApi.Dialogs.ShowErrorMessage(FailureMessage(outcome.Failure, target), ResourceProvider.GetString("LOCSAS_PluginName"));
                 }
+
+                return outcome;
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, $"Preparing Steam for '{game.Name}' failed.");
-                args.CancelStartup = true;
+                Logger.Error(ex, $"{source} target='{target}': switching Steam failed.");
                 PlayniteApi.Dialogs.ShowErrorMessage(
                     string.Format(ResourceProvider.GetString("LOCSAS_ErrorUnexpected"), ex.Message),
                     ResourceProvider.GetString("LOCSAS_PluginName"));
+                return LaunchOutcome.Failed(LaunchFailure.None, ex.Message);
+            }
+            finally
+            {
+                System.Threading.Interlocked.Exchange(ref switching, 0);
+                topPanel?.Refresh();
             }
         }
 
-        private LaunchOutcome PrepareSteam(string gameName, Guid gameId, string target)
+        /// <param name="gameId">The game being started (excluded from "running game" detection); null for a manual switch.</param>
+        private LaunchOutcome PrepareSteam(Guid? gameId, string target)
         {
+            // A manual switch is an explicit choice: never ask "switch?" again.
+            var askBeforeSwitch = gameId != null && settings.Settings.AskBeforeSwitch;
+
             // Fresh account list for the decision; the menu cache may lag behind the watcher.
             var steam = LocateSteam();
             var accounts = steam == null ? new SteamAccount[0] : LoginUsersFile.Load(environment, steam.LoginUsersPath);
@@ -180,7 +229,7 @@ namespace SteamAccountSwitcher
             var request = new LaunchRequest
             {
                 TargetAccountName = target,
-                AskBeforeSwitch = settings.Settings.AskBeforeSwitch,
+                AskBeforeSwitch = askBeforeSwitch,
                 PlayniteRunningSteamGame = PlayniteApi.Database.Games
                     .FirstOrDefault(g => g.Id != gameId && g.PluginId == SteamLibraryPluginId && (g.IsRunning || g.IsLaunching))?.Name,
             };

@@ -13,6 +13,13 @@
     <sys:String x:Key="LOCSAS_MenuNoAccounts">Nie znaleziono kont Steam</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">W pliku loginusers.vdf Steama nie ma żadnych kont. Zaloguj się raz w Steamie na każde konto albo ustaw ścieżkę do Steama w ustawieniach dodatku.</sys:String>
 
+    <!-- Panel górny -->
+    <sys:String x:Key="LOCSAS_TopPanelNotRunning">Steam zamknięty</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelLoggingIn">Steam się loguje…</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelUnknown">Nieznane konto ({0})</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelTooltip">Konto Steam: {0}. Kliknij, aby przełączyć.</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelSwitching">Przełączanie konta Steam już trwa…</sys:String>
+
     <!-- Start gry -->
     <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam jest zalogowany na {0}. Przełączyć na {1}? Steam zostanie uruchomiony ponownie.</sys:String>
     <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">Na koncie {0} działa gra „{1}”. Zamknięcie Steama w celu przełączenia na {2} ją zakończy. Kontynuować?</sys:String>
