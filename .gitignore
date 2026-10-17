@@ -488,3 +488,6 @@ $RECYCLE.BIN/
 /CLAUDE.md
 /tools/m0-results.md
 /.private.git/
+
+# Release packages
+/dist/
