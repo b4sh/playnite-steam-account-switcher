@@ -77,6 +77,45 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
+        public void Restart_waits_for_steam_service_to_exit()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            var messages = new List<string>();
+            var switcher = CreateSwitcher();
+            switcher.Diagnostics = messages.Add;
+
+            switcher.SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None);
+
+            Assert.False(steam.ServiceErrorShown, "Steam was restarted while steamservice.exe was still shutting down.");
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+            Assert.Contains(messages, m => m.StartsWith("steamservice.exe gone"));
+        }
+
+        [Fact]
+        public void Hanging_steam_service_delays_restart_only_up_to_its_timeout()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            steam.ServiceExitDelay = null;
+            var messages = new List<string>();
+            var switcher = CreateSwitcher(new SwitchOptions { ServiceShutdownTimeout = TimeSpan.FromSeconds(15) });
+            switcher.Diagnostics = messages.Add;
+            DateTime? restartedAt = null;
+            env.OnStartProcess += (file, args, pid) =>
+            {
+                if (args == "-silent")
+                {
+                    restartedAt = clock.UtcNow;
+                }
+            };
+
+            switcher.SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None);
+
+            Assert.InRange(restartedAt.Value - steam.ExitedAt.Value, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(16));
+            Assert.Contains(messages, m => m.StartsWith("steamservice.exe still running"));
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+        }
+
+        [Fact]
         public void Shutdown_timeout_fails_and_never_starts_steam_again()
         {
             env.SetSteamRunning(RunningPid, B);

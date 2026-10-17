@@ -24,6 +24,9 @@ namespace SteamAccountSwitcher.Core.Steam
         /// <summary>Process name (without .exe) of a live process, or null when no such process exists.</summary>
         string GetProcessName(int processId);
 
+        /// <summary>Whether any process with this name (without .exe) is running.</summary>
+        bool IsProcessRunning(string processName);
+
         /// <summary>Starts a process and returns its id.</summary>
         int StartProcess(string fileName, string arguments);
 

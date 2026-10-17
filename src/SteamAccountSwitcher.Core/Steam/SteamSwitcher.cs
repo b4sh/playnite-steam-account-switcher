@@ -11,6 +11,9 @@ namespace SteamAccountSwitcher.Core.Steam
 
         public TimeSpan LoginTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
+        /// <summary>How long to wait for steamservice.exe after steam.exe exited; not an error when exceeded.</summary>
+        public TimeSpan ServiceShutdownTimeout { get; set; } = TimeSpan.FromSeconds(15);
+
         public TimeSpan PollInterval { get; set; } = TimeSpan.FromMilliseconds(500);
     }
 
@@ -67,6 +70,8 @@ namespace SteamAccountSwitcher.Core.Steam
         private readonly SteamInstallation installation;
         private readonly SwitchOptions options;
 
+        internal const string ServiceProcessName = "steamservice";
+
         public SteamSwitcher(ISteamEnvironment environment, IClock clock, SteamInstallation installation, SwitchOptions options)
         {
             this.environment = environment ?? throw new ArgumentNullException(nameof(environment));
@@ -74,6 +79,9 @@ namespace SteamAccountSwitcher.Core.Steam
             this.installation = installation ?? throw new ArgumentNullException(nameof(installation));
             this.options = options ?? new SwitchOptions();
         }
+
+        /// <summary>Optional sink for diagnostic messages (wait durations); the plugin forwards them to its log.</summary>
+        public Action<string> Diagnostics { get; set; }
 
         /// <summary>Closes Steam if it runs, sets AutoLoginUser, starts Steam and waits until <paramref name="account"/> is logged in.</summary>
         public void SwitchTo(SteamAccount account, SteamState currentState, IProgress<SwitchStage> progress, CancellationToken cancellationToken, Func<SwitchWait, bool> keepWaiting = null)
@@ -99,7 +107,8 @@ namespace SteamAccountSwitcher.Core.Steam
         public void Shutdown(int processId, CancellationToken cancellationToken, Func<SwitchWait, bool> keepWaiting = null)
         {
             environment.StartProcess(installation.ExePath, "-shutdown");
-            var deadline = clock.UtcNow + options.ShutdownTimeout;
+            var started = clock.UtcNow;
+            var deadline = started + options.ShutdownTimeout;
             while (SteamStateReader.IsSteamProcess(environment, processId))
             {
                 if (clock.UtcNow >= deadline && !KeepWaiting(keepWaiting, SwitchWait.Shutdown, options.ShutdownTimeout, ref deadline))
@@ -110,6 +119,31 @@ namespace SteamAccountSwitcher.Core.Steam
 
                 clock.Sleep(options.PollInterval, cancellationToken);
             }
+
+            Diagnostics?.Invoke($"steam.exe (pid {processId}) exited after {(clock.UtcNow - started).TotalSeconds:0.0} s.");
+            WaitForServiceExit(cancellationToken);
+        }
+
+        /// <summary>
+        /// Starting Steam while the Steam Client Service of the previous instance is still shutting down
+        /// can make Steam report a service error (SPEC §5.4). Waits for steamservice.exe briefly; best effort.
+        /// </summary>
+        private void WaitForServiceExit(CancellationToken cancellationToken)
+        {
+            var started = clock.UtcNow;
+            var deadline = started + options.ServiceShutdownTimeout;
+            while (environment.IsProcessRunning(ServiceProcessName))
+            {
+                if (clock.UtcNow >= deadline)
+                {
+                    Diagnostics?.Invoke($"steamservice.exe still running after {options.ServiceShutdownTimeout.TotalSeconds:0} s; starting Steam anyway.");
+                    return;
+                }
+
+                clock.Sleep(options.PollInterval, cancellationToken);
+            }
+
+            Diagnostics?.Invoke($"steamservice.exe gone {(clock.UtcNow - started).TotalSeconds:0.0} s after steam.exe.");
         }
 
         /// <summary>Waits until Steam runs with ActiveUser == <paramref name="accountId"/>.</summary>

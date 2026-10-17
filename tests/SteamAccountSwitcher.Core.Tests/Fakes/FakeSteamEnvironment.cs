@@ -39,7 +39,22 @@ namespace SteamAccountSwitcher.Core.Tests.Fakes
             Log.Add("autologin: " + accountName);
         }
 
+        public const int ServicePid = 900;
+
         public string GetProcessName(int processId) => Processes.TryGetValue(processId, out var name) ? name : null;
+
+        public bool IsProcessRunning(string processName)
+        {
+            foreach (var name in Processes.Values)
+            {
+                if (string.Equals(name, processName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public int StartProcess(string fileName, string arguments)
         {
@@ -65,6 +80,7 @@ namespace SteamAccountSwitcher.Core.Tests.Fakes
         public void SetSteamRunning(int pid, uint activeUser, uint runningAppId = 0)
         {
             Processes[pid] = "steam";
+            Processes[ServicePid] = "steamservice";
             SetUserValue("ActiveProcess", "pid", (uint)pid);
             SetUserValue("ActiveProcess", "ActiveUser", activeUser);
             SetUserValue(null, "RunningAppID", runningAppId);

@@ -175,7 +175,7 @@ namespace SteamAccountSwitcher
             var steam = LocateSteam();
             var accounts = steam == null ? new SteamAccount[0] : LoginUsersFile.Load(environment, steam.LoginUsersPath);
             var options = settings.Settings.ToSwitchOptions();
-            var switcher = steam == null ? null : new SteamSwitcher(environment, SystemClock.Instance, steam, options);
+            var switcher = steam == null ? null : new SteamSwitcher(environment, SystemClock.Instance, steam, options) { Diagnostics = Logger.Info };
             var coordinator = new LaunchCoordinator(environment, switcher, new PlayniteLaunchInteraction(PlayniteApi));
             var request = new LaunchRequest
             {

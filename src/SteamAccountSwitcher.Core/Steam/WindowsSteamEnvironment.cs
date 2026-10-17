@@ -64,6 +64,17 @@ namespace SteamAccountSwitcher.Core.Steam
             }
         }
 
+        public bool IsProcessRunning(string processName)
+        {
+            var processes = Process.GetProcessesByName(processName);
+            foreach (var process in processes)
+            {
+                process.Dispose();
+            }
+
+            return processes.Length > 0;
+        }
+
         public int StartProcess(string fileName, string arguments)
         {
             var info = new ProcessStartInfo(fileName, arguments)

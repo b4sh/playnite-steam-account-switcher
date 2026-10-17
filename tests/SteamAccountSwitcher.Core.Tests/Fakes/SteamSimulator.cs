@@ -8,7 +8,8 @@ namespace SteamAccountSwitcher.Core.Tests.Fakes
     /// Reproduces the Steam client behaviour measured in M0 (SPEC §5.3) on top of the fakes:
     /// "-shutdown" zeroes pid/ActiveUser first and ends the process a second later;
     /// a normal start sets pid at once and ActiveUser a few seconds later, but only for an
-    /// account with a remembered password.
+    /// account with a remembered password. steamservice.exe ends a bit after steam.exe; starting Steam
+    /// before that is recorded as the "Steam Service Error" seen in manual tests (SPEC §5.4).
     /// </summary>
     public sealed class SteamSimulator
     {
@@ -30,6 +31,14 @@ namespace SteamAccountSwitcher.Core.Tests.Fakes
         public TimeSpan ShutdownDuration { get; set; } = TimeSpan.FromSeconds(2);
 
         public TimeSpan LoginDuration { get; set; } = TimeSpan.FromSeconds(7);
+
+        /// <summary>How long steamservice.exe outlives steam.exe; null = it never exits.</summary>
+        public TimeSpan? ServiceExitDelay { get; set; } = TimeSpan.FromSeconds(3);
+
+        /// <summary>Steam was started while the previous steamservice.exe was still shutting down.</summary>
+        public bool ServiceErrorShown { get; private set; }
+
+        private bool serviceShuttingDown;
 
         /// <summary>When the steam.exe process actually exited (null = still running).</summary>
         public DateTime? ExitedAt { get; private set; }
@@ -63,11 +72,26 @@ namespace SteamAccountSwitcher.Core.Tests.Fakes
                 {
                     env.Processes.Remove(running);
                     ExitedAt = clock.UtcNow;
+                    serviceShuttingDown = true;
+                    if (ServiceExitDelay != null)
+                    {
+                        clock.At(ServiceExitDelay.Value, () =>
+                        {
+                            env.Processes.Remove(FakeSteamEnvironment.ServicePid);
+                            serviceShuttingDown = false;
+                        });
+                    }
                 });
                 return;
             }
 
+            if (serviceShuttingDown)
+            {
+                ServiceErrorShown = true;
+            }
+
             env.Processes[pid] = "steam";
+            env.Processes[FakeSteamEnvironment.ServicePid] = "steamservice";
             env.SetUserValue("ActiveProcess", "pid", (uint)pid);
             env.SetUserValue("ActiveProcess", "ActiveUser", 0u);
             var user = env.GetUserSteamString(null, "AutoLoginUser");
