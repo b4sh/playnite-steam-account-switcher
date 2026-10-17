@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Windows;
 using Playnite.SDK;
 using SteamAccountSwitcher.Core.Decision;
@@ -34,6 +35,19 @@ namespace SteamAccountSwitcher
             var caption = ResourceProvider.GetString("LOCSAS_PluginName");
             var result = api.MainView.UIDispatcher.Invoke(() => api.Dialogs.ShowMessage(text, caption, MessageBoxButton.YesNo, icon));
             return result == MessageBoxResult.Yes;
+        }
+
+        public bool ConfirmKeepWaiting(SwitchWait wait, SteamAccount target)
+        {
+            var text = wait == SwitchWait.Shutdown
+                ? ResourceProvider.GetString("LOCSAS_KeepWaitingShutdown")
+                : string.Format(ResourceProvider.GetString("LOCSAS_KeepWaitingLogin"), target?.DisplayName);
+            var keepWaiting = new MessageBoxOption(ResourceProvider.GetString("LOCSAS_ButtonKeepWaiting"), true, false);
+            var cancel = new MessageBoxOption(ResourceProvider.GetString("LOCSAS_ButtonCancelStart"), false, true);
+            var caption = ResourceProvider.GetString("LOCSAS_PluginName");
+            var result = api.MainView.UIDispatcher.Invoke(() =>
+                api.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, new List<MessageBoxOption> { keepWaiting, cancel }));
+            return result == keepWaiting;
         }
     }
 }

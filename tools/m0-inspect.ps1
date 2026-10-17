@@ -97,10 +97,13 @@ function Get-WatchSnapshot([string]$vdfPath, [hashtable]$cache) {
         if ($a) { "$id (``$($a[0].AccountName)``)" } else { "$id (unknown)" }
     }
     $proc = Get-SteamProcessState
+    # Steam Client Service; Steam reports a service error when restarted before it is gone (M2).
+    $svc = @(Get-Process -Name steamservice -ErrorAction SilentlyContinue | ForEach-Object { $_.Id } | Sort-Object)
     $activeUser = Get-DwordValue (Get-RegValue $ActiveProcessKey 'ActiveUser')
     $auto = Get-RegValue $SteamKey 'AutoLoginUser'
     return [ordered]@{
         'steam.exe'        = $(if ($proc.SteamPids.Count) { $proc.SteamPids -join ', ' } else { 'none' })
+        'steamservice.exe' = $(if ($svc) { $svc -join ', ' } else { 'none' })
         'pid'              = $(if ($proc.Pid) { "$($proc.Pid) ($(if ($proc.PidAlive) { 'alive' } else { 'dead' }))" } else { '0' })
         'ActiveUser'       = (& $nameOf $activeUser)
         'RunningAppID'     = "$(Get-DwordValue (Get-RegValue $SteamKey 'RunningAppID'))"

@@ -20,6 +20,10 @@
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Closing Steam (Steam Cloud sync may take a while)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Starting Steam as {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressWaitingForLogin">Waiting for Steam to log in as {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_KeepWaitingShutdown">Steam is still closing (Steam Cloud is probably syncing). Keep waiting? Steam will not be closed forcibly either way.</sys:String>
+    <sys:String x:Key="LOCSAS_KeepWaitingLogin">Steam is still not logged in as {0}. If Steam asks for the password or a Steam Guard code, enter it in the Steam window. Keep waiting?</sys:String>
+    <sys:String x:Key="LOCSAS_ButtonKeepWaiting">Keep waiting</sys:String>
+    <sys:String x:Key="LOCSAS_ButtonCancelStart">Cancel game start</sys:String>
 
     <!-- Errors -->
     <sys:String x:Key="LOCSAS_ErrorSteamNotFound">Steam installation was not found. Set the Steam path in the add-on settings.</sys:String>

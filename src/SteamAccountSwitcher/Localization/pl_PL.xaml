@@ -20,6 +20,10 @@
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Zamykanie Steama (może trwać synchronizacja Steam Cloud)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Uruchamianie Steama na koncie {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressWaitingForLogin">Czekanie na zalogowanie Steama na konto {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_KeepWaitingShutdown">Steam wciąż się zamyka (prawdopodobnie trwa synchronizacja Steam Cloud). Czekać dalej? W żadnym wypadku Steam nie zostanie zamknięty siłą.</sys:String>
+    <sys:String x:Key="LOCSAS_KeepWaitingLogin">Steam wciąż nie jest zalogowany na konto {0}. Jeśli Steam prosi o hasło lub kod Steam Guard, wpisz je w oknie Steama. Czekać dalej?</sys:String>
+    <sys:String x:Key="LOCSAS_ButtonKeepWaiting">Czekaj dalej</sys:String>
+    <sys:String x:Key="LOCSAS_ButtonCancelStart">Anuluj start gry</sys:String>
 
     <!-- Błędy -->
     <sys:String x:Key="LOCSAS_ErrorSteamNotFound">Nie znaleziono instalacji Steama. Ustaw ścieżkę do Steama w ustawieniach dodatku.</sys:String>

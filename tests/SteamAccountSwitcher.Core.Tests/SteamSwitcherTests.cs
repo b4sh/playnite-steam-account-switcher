@@ -77,6 +77,45 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
+        public void Restart_waits_for_steam_service_to_exit()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            var messages = new List<string>();
+            var switcher = CreateSwitcher();
+            switcher.Diagnostics = messages.Add;
+
+            switcher.SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None);
+
+            Assert.False(steam.ServiceErrorShown, "Steam was restarted while steamservice.exe was still shutting down.");
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+            Assert.Contains(messages, m => m.StartsWith("steamservice.exe gone"));
+        }
+
+        [Fact]
+        public void Hanging_steam_service_delays_restart_only_up_to_its_timeout()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            steam.ServiceExitDelay = null;
+            var messages = new List<string>();
+            var switcher = CreateSwitcher(new SwitchOptions { ServiceShutdownTimeout = TimeSpan.FromSeconds(15) });
+            switcher.Diagnostics = messages.Add;
+            DateTime? restartedAt = null;
+            env.OnStartProcess += (file, args, pid) =>
+            {
+                if (args == "-silent")
+                {
+                    restartedAt = clock.UtcNow;
+                }
+            };
+
+            switcher.SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None);
+
+            Assert.InRange(restartedAt.Value - steam.ExitedAt.Value, TimeSpan.FromSeconds(15), TimeSpan.FromSeconds(16));
+            Assert.Contains(messages, m => m.StartsWith("steamservice.exe still running"));
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+        }
+
+        [Fact]
         public void Shutdown_timeout_fails_and_never_starts_steam_again()
         {
             env.SetSteamRunning(RunningPid, B);
@@ -103,6 +142,91 @@ namespace SteamAccountSwitcher.Core.Tests
 
             Assert.Equal(SteamSwitchError.LoginTimeout, ex.Error);
             Assert.InRange(clock.Elapsed, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(31));
+        }
+
+        [Fact]
+        public void Login_timeout_asks_and_keeps_waiting_until_login()
+        {
+            steam.LoginDuration = TimeSpan.FromSeconds(45);
+            var asked = new List<SwitchWait>();
+
+            CreateSwitcher(new SwitchOptions { LoginTimeout = TimeSpan.FromSeconds(30) })
+                .SwitchTo(accountA, SteamState.NotRunning, null, CancellationToken.None, wait => { asked.Add(wait); return true; });
+
+            Assert.Equal(new[] { SwitchWait.Login }, asked);
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+        }
+
+        [Fact]
+        public void Login_timeout_restarts_the_full_timeout_after_each_yes()
+        {
+            steam.RememberedAccounts.Remove("a_login");
+            var askedAt = new List<TimeSpan>();
+
+            Assert.Throws<SteamSwitchException>(() =>
+                CreateSwitcher(new SwitchOptions { LoginTimeout = TimeSpan.FromSeconds(30) })
+                    .SwitchTo(accountA, SteamState.NotRunning, null, CancellationToken.None, wait =>
+                    {
+                        askedAt.Add(clock.Elapsed);
+                        return askedAt.Count < 3;
+                    }));
+
+            Assert.Equal(3, askedAt.Count);
+            Assert.InRange(askedAt[1] - askedAt[0], TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(31));
+            Assert.InRange(askedAt[2] - askedAt[1], TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(31));
+        }
+
+        [Fact]
+        public void Login_timeout_answered_no_throws()
+        {
+            steam.RememberedAccounts.Remove("a_login");
+
+            var ex = Assert.Throws<SteamSwitchException>(() =>
+                CreateSwitcher().SwitchTo(accountA, SteamState.NotRunning, null, CancellationToken.None, wait => false));
+
+            Assert.Equal(SteamSwitchError.LoginTimeout, ex.Error);
+        }
+
+        [Fact]
+        public void Shutdown_timeout_asks_and_keeps_waiting_for_long_cloud_sync()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            steam.ShutdownDuration = TimeSpan.FromSeconds(90);
+            var asked = new List<SwitchWait>();
+
+            CreateSwitcher(new SwitchOptions { ShutdownTimeout = TimeSpan.FromSeconds(60) })
+                .SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None, wait => { asked.Add(wait); return true; });
+
+            Assert.Equal(new[] { SwitchWait.Shutdown }, asked);
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+        }
+
+        [Fact]
+        public void Shutdown_timeout_answered_no_leaves_steam_running()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            steam.HangOnShutdown = true;
+
+            var ex = Assert.Throws<SteamSwitchException>(() =>
+                CreateSwitcher().SwitchTo(accountA, SteamStateReader.Read(env), null, CancellationToken.None, wait => false));
+
+            Assert.Equal(SteamSwitchError.ShutdownTimeout, ex.Error);
+            Assert.True(env.Processes.ContainsKey(RunningPid));
+            Assert.Equal(new[] { $"start: {SteamSimulator.ExePath} -shutdown" }, env.Log);
+        }
+
+        [Fact]
+        public void WaitForAnyLogin_keeps_waiting_when_asked()
+        {
+            env.SetSteamRunning(RunningPid, 0);
+            clock.At(TimeSpan.FromSeconds(50), () => env.SetUserValue("ActiveProcess", "ActiveUser", B));
+            var asked = 0;
+
+            var state = CreateSwitcher(new SwitchOptions { LoginTimeout = TimeSpan.FromSeconds(30) })
+                .WaitForAnyLogin(CancellationToken.None, wait => { asked++; return true; });
+
+            Assert.Equal(1, asked);
+            Assert.Equal(B, state.ActiveUser);
         }
 
         [Fact]
