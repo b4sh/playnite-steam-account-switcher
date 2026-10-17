@@ -49,7 +49,8 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="{Binding DisplayName}" />
+                        <!-- Implicit theme styles do not reach TextBlocks inside templates; use the theme brush directly. -->
+                        <TextBlock Text="{Binding DisplayName}" Foreground="{DynamicResource TextBrush}" />
                         <TextBlock Text="{Binding Warning}" Margin="10,0,0,0" Foreground="Orange" />
                     </StackPanel>
                 </DataTemplate>
