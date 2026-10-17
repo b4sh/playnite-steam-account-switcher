@@ -104,14 +104,29 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
-        public void A5_account_without_remembered_password_fails_with_login_timeout()
+        public void A5_no_remembered_password_user_stops_waiting_cancels_silently()
         {
             steam.RememberedAccounts.Remove("a_login");
 
             var outcome = Prepare("a_login");
 
-            Assert.Equal(LaunchOutcomeKind.Failed, outcome.Kind);
-            Assert.Equal(LaunchFailure.LoginTimeout, outcome.Failure);
+            Assert.Equal(LaunchOutcomeKind.Cancelled, outcome.Kind);
+            Assert.Equal(LaunchFailure.None, outcome.Failure);
+            Assert.Equal("KeepWaiting Login a_login", Assert.Single(interaction.Questions));
+        }
+
+        [Fact]
+        public void A5_user_logs_in_manually_after_keep_waiting_and_game_starts()
+        {
+            // Typing the password / Steam Guard code takes longer than the 30 s login timeout.
+            steam.LoginDuration = TimeSpan.FromSeconds(50);
+            interaction.KeepWaitingAnswers.Enqueue(true);
+
+            var outcome = Prepare("a_login");
+
+            Assert.Equal(LaunchOutcomeKind.Proceed, outcome.Kind);
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
+            Assert.Equal("KeepWaiting Login a_login", Assert.Single(interaction.Questions));
         }
 
         [Theory]
@@ -173,14 +188,43 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
-        public void Logging_in_forever_fails_with_login_timeout()
+        public void Logging_in_forever_asks_and_cancels_when_user_stops_waiting()
         {
             env.SetSteamRunning(RunningPid, 0);
 
             var outcome = Prepare("a_login");
 
-            Assert.Equal(LaunchFailure.LoginTimeout, outcome.Failure);
+            Assert.Equal(LaunchOutcomeKind.Cancelled, outcome.Kind);
+            Assert.Equal("KeepWaiting Login a_login", Assert.Single(interaction.Questions));
             Assert.Empty(env.Log);
+        }
+
+        [Fact]
+        public void Steam_on_login_screen_user_keeps_waiting_and_logs_in_on_target()
+        {
+            env.SetSteamRunning(RunningPid, 0);
+            clock.At(TimeSpan.FromSeconds(45), () => env.SetUserValue("ActiveProcess", "ActiveUser", A));
+            interaction.KeepWaitingAnswers.Enqueue(true);
+
+            var outcome = Prepare("a_login");
+
+            Assert.Equal(LaunchOutcomeKind.Proceed, outcome.Kind);
+            Assert.Empty(env.Log);
+        }
+
+        [Fact]
+        public void Wrong_account_is_an_error_not_a_question()
+        {
+            env.OnStartProcess = (file, args, pid) =>
+            {
+                env.SetSteamRunning(pid, 0);
+                clock.At(TimeSpan.FromSeconds(3), () => env.SetUserValue("ActiveProcess", "ActiveUser", B));
+            };
+
+            var outcome = Prepare("a_login");
+
+            Assert.Equal(LaunchFailure.WrongAccount, outcome.Failure);
+            Assert.Empty(interaction.Questions);
         }
 
         [Fact]
@@ -196,12 +240,29 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
-        public void Shutdown_timeout_is_reported()
+        public void Shutdown_timeout_user_stops_waiting_cancels_and_leaves_steam_running()
         {
             env.SetSteamRunning(RunningPid, B);
             steam.HangOnShutdown = true;
 
-            Assert.Equal(LaunchFailure.ShutdownTimeout, Prepare("a_login").Failure);
+            var outcome = Prepare("a_login");
+
+            Assert.Equal(LaunchOutcomeKind.Cancelled, outcome.Kind);
+            Assert.Equal("KeepWaiting Shutdown a_login", Assert.Single(interaction.Questions));
+            Assert.True(env.Processes.ContainsKey(RunningPid));
+        }
+
+        [Fact]
+        public void Long_cloud_sync_user_keeps_waiting_and_switch_completes()
+        {
+            env.SetSteamRunning(RunningPid, B);
+            steam.ShutdownDuration = TimeSpan.FromSeconds(100);
+            interaction.KeepWaitingAnswers.Enqueue(true);
+
+            var outcome = Prepare("a_login");
+
+            Assert.Equal(LaunchOutcomeKind.Proceed, outcome.Kind);
+            Assert.Equal(A, SteamStateReader.Read(env).ActiveUser);
         }
 
         [Fact]
@@ -219,12 +280,21 @@ namespace SteamAccountSwitcher.Core.Tests
         {
             public bool Answer { get; set; } = true;
 
+            /// <summary>Answers to "keep waiting?" in order; "no" once exhausted.</summary>
+            public Queue<bool> KeepWaitingAnswers { get; } = new Queue<bool>();
+
             public List<string> Questions { get; } = new List<string>();
 
             public bool ConfirmSwitch(SwitchConfirmation kind, SteamAccount target, SteamAccount current, string runningGameName)
             {
                 Questions.Add($"{kind} {target.AccountName}<-{current?.AccountName} {runningGameName}".TrimEnd());
                 return Answer;
+            }
+
+            public bool ConfirmKeepWaiting(SwitchWait wait, SteamAccount target)
+            {
+                Questions.Add($"KeepWaiting {wait} {target?.AccountName}");
+                return KeepWaitingAnswers.Count > 0 && KeepWaitingAnswers.Dequeue();
             }
         }
     }

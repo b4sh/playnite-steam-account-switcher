@@ -11,6 +11,9 @@ namespace SteamAccountSwitcher.Core.Decision
     {
         /// <summary>Returns false to cancel the game start.</summary>
         bool ConfirmSwitch(SwitchConfirmation kind, SteamAccount target, SteamAccount current, string runningGameName);
+
+        /// <summary>A wait timed out; returns true to wait another timeout period, false to cancel the game start.</summary>
+        bool ConfirmKeepWaiting(SwitchWait wait, SteamAccount target);
     }
 
     public enum LaunchOutcomeKind
@@ -95,6 +98,15 @@ namespace SteamAccountSwitcher.Core.Decision
 
             var target = accounts.FirstOrDefault(a => string.Equals(a.AccountName, request.TargetAccountName, StringComparison.OrdinalIgnoreCase));
             var waitedForLogin = false;
+
+            // "Stop waiting" is the user's choice: cancel silently instead of reporting a timeout error.
+            var userStoppedWaiting = false;
+            Func<SwitchWait, bool> keepWaiting = wait =>
+            {
+                var keep = interaction.ConfirmKeepWaiting(wait, target);
+                userStoppedWaiting = !keep;
+                return keep;
+            };
             try
             {
                 while (true)
@@ -130,7 +142,12 @@ namespace SteamAccountSwitcher.Core.Decision
 
                             waitedForLogin = true;
                             progress?.Report(SwitchStage.WaitingForLogin);
-                            switcher.WaitForAnyLogin(cancellationToken);
+                            switcher.WaitForAnyLogin(cancellationToken, keepWaiting);
+                            if (userStoppedWaiting)
+                            {
+                                return LaunchOutcome.Cancelled("user stopped waiting for Steam login");
+                            }
+
                             continue;
 
                         case LaunchAction.StartSteam:
@@ -149,7 +166,7 @@ namespace SteamAccountSwitcher.Core.Decision
                                 }
                             }
 
-                            switcher.SwitchTo(target, state, progress, cancellationToken);
+                            switcher.SwitchTo(target, state, progress, cancellationToken, keepWaiting);
                             return LaunchOutcome.Proceed($"{decision.Action} to '{target.AccountName}' done");
 
                         default:
@@ -160,6 +177,10 @@ namespace SteamAccountSwitcher.Core.Decision
             catch (OperationCanceledException)
             {
                 return LaunchOutcome.Cancelled("cancelled by user");
+            }
+            catch (SteamSwitchException ex) when (userStoppedWaiting)
+            {
+                return LaunchOutcome.Cancelled("user stopped waiting: " + ex.Message);
             }
             catch (SteamSwitchException ex)
             {
