@@ -1,0 +1,49 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCSAS_PluginName">Steam Account Switcher</sys:String>
+    <sys:String x:Key="LOCSAS_UnknownAccount">(nieznane konto)</sys:String>
+    <sys:String x:Key="LOCSAS_NoRememberedPassword">Hasło nie jest zapamiętane – zaloguj się raz w Steamie z zaznaczonym „Zapamiętaj mnie”</sys:String>
+    <sys:String x:Key="LOCSAS_NoRememberedPasswordShort">hasło niezapamiętane</sys:String>
+    <sys:String x:Key="LOCSAS_AccountMissing">konta nie ma w Steamie</sys:String>
+
+    <!-- Menu kontekstowe gry -->
+    <sys:String x:Key="LOCSAS_MenuSection">Konto Steam</sys:String>
+    <sys:String x:Key="LOCSAS_MenuUseDefault">Użyj konta domyślnego</sys:String>
+    <sys:String x:Key="LOCSAS_MenuNoAccounts">Nie znaleziono kont Steam</sys:String>
+    <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">W pliku loginusers.vdf Steama nie ma żadnych kont. Zaloguj się raz w Steamie na każde konto albo ustaw ścieżkę do Steama w ustawieniach dodatku.</sys:String>
+
+    <!-- Start gry -->
+    <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam jest zalogowany na {0}. Przełączyć na {1}? Steam zostanie uruchomiony ponownie.</sys:String>
+    <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">Na koncie {0} działa gra „{1}”. Zamknięcie Steama w celu przełączenia na {2} ją zakończy. Kontynuować?</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressSwitching">Przełączanie Steama na konto {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressShuttingDown">Zamykanie Steama (może trwać synchronizacja Steam Cloud)…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressStarting">Uruchamianie Steama na koncie {0}…</sys:String>
+    <sys:String x:Key="LOCSAS_ProgressWaitingForLogin">Czekanie na zalogowanie Steama na konto {0}…</sys:String>
+
+    <!-- Błędy -->
+    <sys:String x:Key="LOCSAS_ErrorSteamNotFound">Nie znaleziono instalacji Steama. Ustaw ścieżkę do Steama w ustawieniach dodatku.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorUnknownAccount">Konto „{0}” przypisane do tej gry nie jest znane Steamowi. Zaloguj się na nie raz w Steamie albo przypisz inne konto.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorShutdownTimeout">Steam nie zamknął się w ciągu {0} s (może wciąż trwać synchronizacja Steam Cloud). Steam nie został zamknięty siłą; spróbuj uruchomić grę ponownie za chwilę.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorLoginTimeout">Steam nie zalogował się na konto „{0}”. Prawdopodobnie wymaga hasła lub kodu Steam Guard: zaloguj się ręcznie z zaznaczonym „Zapamiętaj mnie” i uruchom grę ponownie.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorWrongAccount">Steam zalogował się na inne konto niż „{0}”. Start gry został anulowany.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorUnexpected">Przełączanie konta Steam nie powiodło się: {0}</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorStoreCorrupt">Steam Account Switcher: plik z przypisaniami kont był uszkodzony i został przeniesiony do {0}. Przypisania zostały wyzerowane.</sys:String>
+    <sys:String x:Key="LOCSAS_ErrorStoreSave">Nie udało się zapisać przypisań kont: {0}</sys:String>
+
+    <!-- Ustawienia -->
+    <sys:String x:Key="LOCSAS_SettingsSteamPath">Folder Steama (puste = wykryj automatycznie):</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDetectedPath">Używany:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsSteamNotFound">nie znaleziono Steama</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDefaultAccount">Konto domyślne dla gier bez przypisanego konta:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsNoDefaultAccount">(brak – nic nie rób)</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsAskBeforeSwitch">Pytaj przed przelogowaniem Steama</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsLaunchArguments">Argumenty uruchomienia Steama:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsShutdownTimeout">Limit czasu zamykania Steama [s]:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsLoginTimeout">Limit czasu logowania Steama [s]:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsShutdownNote">Steam jest zawsze zamykany normalnie, żeby synchronizacja Steam Cloud mogła się zakończyć; nigdy nie jest zamykany siłą.</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsDetectedAccounts">Wykryte konta Steam:</sys:String>
+    <sys:String x:Key="LOCSAS_SettingsRefreshAccounts">Odśwież listę kont</sys:String>
+    <sys:String x:Key="LOCSAS_ValidationTimeout">Limity czasu muszą mieścić się w zakresie 5–600 sekund.</sys:String>
+    <sys:String x:Key="LOCSAS_ValidationLoginArgument">Argumenty uruchomienia nie mogą zawierać -login: dodatek nigdy nie przekazuje Steamowi danych logowania.</sys:String>
+</ResourceDictionary>

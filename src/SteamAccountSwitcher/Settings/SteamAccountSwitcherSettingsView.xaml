@@ -1,0 +1,59 @@
+<UserControl x:Class="SteamAccountSwitcher.Settings.SteamAccountSwitcherSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="600">
+    <StackPanel Margin="20">
+        <TextBlock Text="{DynamicResource LOCSAS_SettingsSteamPath}" />
+        <TextBox Text="{Binding Settings.SteamPath, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0" />
+        <TextBlock Margin="0,5,0,0" Opacity="0.7">
+            <Run Text="{DynamicResource LOCSAS_SettingsDetectedPath}" />
+            <Run Text="{Binding DetectedSteamPath, Mode=OneWay}" />
+        </TextBlock>
+
+        <TextBlock Text="{DynamicResource LOCSAS_SettingsDefaultAccount}" Margin="0,15,0,0" />
+        <ComboBox ItemsSource="{Binding DefaultAccountOptions}"
+                  SelectedValue="{Binding Settings.DefaultAccount}"
+                  SelectedValuePath="AccountName"
+                  DisplayMemberPath="DisplayName"
+                  Margin="0,5,0,0" />
+
+        <CheckBox IsChecked="{Binding Settings.AskBeforeSwitch}" Margin="0,15,0,0"
+                  Content="{DynamicResource LOCSAS_SettingsAskBeforeSwitch}" />
+
+        <TextBlock Text="{DynamicResource LOCSAS_SettingsLaunchArguments}" Margin="0,15,0,0" />
+        <TextBox Text="{Binding Settings.LaunchArguments, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0" />
+
+        <Grid Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="80" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock Text="{DynamicResource LOCSAS_SettingsShutdownTimeout}" VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBox Grid.Column="1" Text="{Binding Settings.ShutdownTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock Grid.Row="1" Text="{DynamicResource LOCSAS_SettingsLoginTimeout}" VerticalAlignment="Center" Margin="0,5,10,0" />
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,5,0,0" Text="{Binding Settings.LoginTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+        <TextBlock Text="{DynamicResource LOCSAS_SettingsShutdownNote}" TextWrapping="Wrap" Margin="0,5,0,0" Opacity="0.7" />
+
+        <DockPanel Margin="0,20,0,0">
+            <Button DockPanel.Dock="Right" Content="{DynamicResource LOCSAS_SettingsRefreshAccounts}" Command="{Binding RefreshAccountsCommand}" />
+            <TextBlock Text="{DynamicResource LOCSAS_SettingsDetectedAccounts}" VerticalAlignment="Center" />
+        </DockPanel>
+        <ItemsControl ItemsSource="{Binding DetectedAccounts}" Margin="0,5,0,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="{Binding DisplayName}" />
+                        <TextBlock Text="{Binding Warning}" Margin="10,0,0,0" Foreground="Orange" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

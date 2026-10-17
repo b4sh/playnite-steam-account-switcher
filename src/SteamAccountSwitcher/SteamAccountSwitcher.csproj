@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>SteamAccountSwitcher</RootNamespace>
+    <AssemblyName>SteamAccountSwitcher</AssemblyName>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Playnite ships its own Playnite.SDK.dll; do not copy it next to the plugin. -->
+    <PackageReference Include="PlayniteSDK" Version="6.18.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SteamAccountSwitcher.Core\SteamAccountSwitcher.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Loaded by Playnite at runtime as loose files, not compiled into the assembly. -->
+    <Page Remove="Localization\*.xaml" />
+    <None Include="Localization\*.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="extension.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="icon.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
