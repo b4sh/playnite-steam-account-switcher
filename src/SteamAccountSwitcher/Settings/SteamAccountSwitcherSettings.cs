@@ -48,7 +48,7 @@ namespace SteamAccountSwitcher.Settings
                 errors.Add("LOCSAS_ValidationTimeout");
             }
 
-            // Never pass credentials to Steam (CLAUDE.md hard rule): switching works via AutoLoginUser only.
+            // Never pass credentials to Steam (hard project rule): switching works via AutoLoginUser only.
             if ((LaunchArguments ?? string.Empty).IndexOf("-login", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 errors.Add("LOCSAS_ValidationLoginArgument");

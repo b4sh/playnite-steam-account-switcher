@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Private files: not part of the public repo, versioned separately in .private.git
+/SPEC.md
+/CLAUDE.md
+/tools/m0-results.md
+/.private.git/
