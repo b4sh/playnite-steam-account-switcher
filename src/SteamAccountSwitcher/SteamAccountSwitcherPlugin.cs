@@ -95,7 +95,7 @@ namespace SteamAccountSwitcher
             foreach (var account in accounts)
             {
                 var name = account.AccountName;
-                var description = account.DisplayName;
+                var description = EscapeAccessKeys(account.DisplayName);
                 if (string.Equals(assigned, name, StringComparison.OrdinalIgnoreCase))
                 {
                     description = "✓ " + description;
@@ -123,6 +123,12 @@ namespace SteamAccountSwitcher
                 Action = _ => Assign(gameIds, null),
             };
         }
+
+        /// <summary>
+        /// Menu headers treat "_" as an access-key marker and hide the first one (e.g. "_login_" shows as "login_");
+        /// a doubled "__" renders as a literal underscore.
+        /// </summary>
+        private static string EscapeAccessKeys(string text) => text?.Replace("_", "__");
 
         public override void OnGameStarting(OnGameStartingEventArgs args)
         {
