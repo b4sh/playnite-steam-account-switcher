@@ -3,6 +3,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Playnite.SDK;
@@ -20,6 +22,10 @@ namespace SteamAccountSwitcher
     {
         private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(3);
 
+        // Layout: margin | icon | margin | account name | margin.
+        private const double EdgeMargin = 8;
+        private const double IconTextGap = 6;
+
         private readonly SteamAccountSwitcherPlugin plugin;
         private readonly ISteamEnvironment environment;
         private readonly TextBlock text;
@@ -32,13 +38,24 @@ namespace SteamAccountSwitcher
             this.plugin = plugin;
             this.environment = environment;
 
-            text = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+            text = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(IconTextGap, 0, EdgeMargin, 0) };
             text.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            content = new StackPanel { Orientation = Orientation.Horizontal, Background = System.Windows.Media.Brushes.Transparent };
-            var icon = LoadIcon();
+            content = new StackPanel { Orientation = Orientation.Horizontal, Background = Brushes.Transparent };
+            var icon = LoadSteamIcon(plugin.LocateSteam()?.ExePath) ?? LoadPluginIcon();
             if (icon != null)
             {
-                content.Children.Add(new Image { Source = icon, Width = 18, Height = 18, VerticalAlignment = VerticalAlignment.Center });
+                content.Children.Add(new Image
+                {
+                    Source = icon,
+                    Width = 18,
+                    Height = 18,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(EdgeMargin, 0, 0, 0),
+                });
+            }
+            else
+            {
+                text.Margin = new Thickness(EdgeMargin, 0, EdgeMargin, 0);
             }
 
             content.Children.Add(text);
@@ -140,7 +157,36 @@ namespace SteamAccountSwitcher
             menu.IsOpen = true;
         }
 
-        private static BitmapImage LoadIcon()
+        /// <summary>Steam's own icon taken from the installed steam.exe (not shipped with the plugin); null if unavailable.</summary>
+        private static ImageSource LoadSteamIcon(string exePath)
+        {
+            if (string.IsNullOrEmpty(exePath) || !File.Exists(exePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                using (var icon = System.Drawing.Icon.ExtractAssociatedIcon(exePath))
+                {
+                    if (icon == null)
+                    {
+                        return null;
+                    }
+
+                    var source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                    source.Freeze();
+                    return source;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogManager.GetLogger().Warn(ex, "Could not read the Steam icon, using the plugin icon.");
+                return null;
+            }
+        }
+
+        private static BitmapImage LoadPluginIcon()
         {
             var path = Path.Combine(Path.GetDirectoryName(typeof(TopPanel).Assembly.Location) ?? string.Empty, "icon.png");
             if (!File.Exists(path))
