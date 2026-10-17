@@ -13,6 +13,13 @@
     <sys:String x:Key="LOCSAS_MenuNoAccounts">No Steam accounts found</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">No accounts were found in Steam's loginusers.vdf. Log in to each account in Steam once, or set the Steam path in the add-on settings.</sys:String>
 
+    <!-- Top panel -->
+    <sys:String x:Key="LOCSAS_TopPanelNotRunning">Steam closed</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelLoggingIn">Steam logging in…</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelUnknown">Unknown account ({0})</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelTooltip">Steam account: {0}. Click to switch.</sys:String>
+    <sys:String x:Key="LOCSAS_TopPanelSwitching">A Steam account switch is already in progress…</sys:String>
+
     <!-- Launch -->
     <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam is logged in as {0}. Switch to {1}? Steam will restart.</sys:String>
     <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">On account {0} the game "{1}" is running. Closing Steam to switch to {2} will end it. Continue?</sys:String>

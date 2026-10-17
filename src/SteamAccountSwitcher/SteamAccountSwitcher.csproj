@@ -11,6 +11,10 @@
     <PackageReference Include="PlayniteSDK" Version="6.18.0" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Icon.ExtractAssociatedIcon for the Steam icon in the top panel. -->
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\SteamAccountSwitcher.Core\SteamAccountSwitcher.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
