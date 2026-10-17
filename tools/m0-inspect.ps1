@@ -16,9 +16,15 @@
 
     With -Label the same report is appended (as Markdown) to tools/m0-results.md.
 
+    With -Watch it instead polls every -IntervalMs (default 500 ms) and prints only changes of
+    steam.exe processes, ActiveProcess\pid, ActiveUser, RunningAppID, AutoLoginUser,
+    RememberPassword and loginusers.vdf (write time, account with AutoLogin = 1), with timestamps.
+    Stop with Ctrl+C. With -Label every change is appended to the results file as it happens.
+
 .EXAMPLE
     .\tools\m0-inspect.ps1
     .\tools\m0-inspect.ps1 -Label "S3 logged in as A"
+    .\tools\m0-inspect.ps1 -Watch -Label "W1 switch to A"
 #>
 [CmdletBinding()]
 param(
@@ -27,16 +33,18 @@ param(
     # Results file (default: m0-results.md next to this script).
     [string]$ResultsPath,
     # Optional Steam directory override (default: from registry).
-    [string]$SteamPath
+    [string]$SteamPath,
+    # Poll and print changes until Ctrl+C instead of a one-off report.
+    [switch]$Watch,
+    # Poll interval for -Watch.
+    [ValidateRange(50, 60000)]
+    [int]$IntervalMs = 500
 )
 
 Set-StrictMode -Version 2.0
 if (-not $ResultsPath) { $ResultsPath = Join-Path $PSScriptRoot 'm0-results.md' }
 $ErrorActionPreference = 'Stop'
-
-$SteamId64Base = [UInt64]76561197960265728
-$SteamKey = 'HKCU:\Software\Valve\Steam'
-$ActiveProcessKey = 'HKCU:\Software\Valve\Steam\ActiveProcess'
+. (Join-Path $PSScriptRoot 'm0-common.ps1')
 
 # Fields of loginusers.vdf whose values are printed. Other fields are listed by name only.
 $KnownUserFields = @('AccountName', 'PersonaName', 'RememberPassword', 'MostRecent', 'AllowAutoLogin',
@@ -44,18 +52,6 @@ $KnownUserFields = @('AccountName', 'PersonaName', 'RememberPassword', 'MostRece
 
 $out = New-Object System.Collections.Generic.List[string]
 function Emit([string]$line = '') { $out.Add($line) }
-
-function Get-RegValue([string]$path, [string]$name) {
-    # Returns @{ Exists; Kind; Value } without modifying anything.
-    $key = Get-Item -LiteralPath $path -ErrorAction SilentlyContinue
-    if (-not $key) { return @{ Exists = $false; Kind = 'key missing'; Value = $null } }
-    if ($key.GetValueNames() -notcontains $name) { return @{ Exists = $false; Kind = 'missing'; Value = $null } }
-    return @{
-        Exists = $true
-        Kind   = $key.GetValueKind($name).ToString()
-        Value  = $key.GetValue($name, $null, 'DoNotExpandEnvironmentNames')
-    }
-}
 
 function Format-RegValue($rv) {
     if (-not $rv.Exists) { return "_($($rv.Kind))_" }
@@ -66,11 +62,6 @@ function Format-RegValue($rv) {
     }
     if ($v -is [byte[]]) { return ('`{0}` ({1})' -f ([BitConverter]::ToString($v)), $rv.Kind) }
     return ('`{0}` ({1})' -f $v, $rv.Kind)
-}
-
-function Get-DwordValue($rv) {
-    if (-not $rv.Exists -or $rv.Kind -ne 'DWord') { return $null }
-    return [BitConverter]::ToUInt32([BitConverter]::GetBytes([int32]$rv.Value), 0)
 }
 
 function Describe-Process([int]$id) {
@@ -85,33 +76,76 @@ function Describe-Process([int]$id) {
     }
 }
 
-function ConvertFrom-TextVdf([string]$text) {
-    # Minimal text-VDF reader: quoted strings, braces, // comments. Duplicate keys: last wins.
-    $root = [ordered]@{}
-    $stack = New-Object System.Collections.Stack
-    $current = $root
-    $pendingKey = $null
-    foreach ($m in [regex]::Matches($text, '"((?:[^"\\]|\\.)*)"|[{}]|//[^\n]*')) {
-        $t = $m.Value
-        if ($t.StartsWith('//')) { continue }
-        if ($t -eq '{') {
-            $child = [ordered]@{}
-            $current[$pendingKey] = $child
-            $stack.Push($current)
-            $current = $child
-            $pendingKey = $null
+function Get-WatchSnapshot([string]$vdfPath, [hashtable]$cache) {
+    # Re-parse loginusers.vdf only when its write time changes.
+    $vdfText = 'missing'
+    if ($vdfPath -and (Test-Path -LiteralPath $vdfPath)) {
+        $mtime = (Get-Item -LiteralPath $vdfPath).LastWriteTime
+        if ($cache['VdfTime'] -ne $mtime) {
+            $cache['VdfTime'] = $mtime
+            $cache['Accounts'] = @(Read-LoginUsers (Split-Path (Split-Path $vdfPath)))
         }
-        elseif ($t -eq '}') {
-            if ($stack.Count -gt 0) { $current = $stack.Pop() }
-            $pendingKey = $null
-        }
-        else {
-            $s = $m.Groups[1].Value -replace '\\(.)', '$1'
-            if ($null -eq $pendingKey) { $pendingKey = $s }
-            else { $current[$pendingKey] = $s; $pendingKey = $null }
+        $auto = @($cache['Accounts'] | Where-Object { $_.AutoLogin -eq '1' } | ForEach-Object { $_.AccountName }) -join ', '
+        $autoText = if ($auto) { '`' + $auto + '`' } else { 'none' }
+        $vdfText = 'written {0}, AutoLogin=1: {1}' -f $mtime.ToString('HH:mm:ss.fff'), $autoText
+    }
+    $nameOf = {
+        param($id)
+        if ($null -eq $id) { return 'n/a' }
+        if ($id -eq 0) { return '0' }
+        $a = @($cache['Accounts'] | Where-Object { $_.AccountId -eq $id })
+        if ($a) { "$id (``$($a[0].AccountName)``)" } else { "$id (unknown)" }
+    }
+    $proc = Get-SteamProcessState
+    $activeUser = Get-DwordValue (Get-RegValue $ActiveProcessKey 'ActiveUser')
+    $auto = Get-RegValue $SteamKey 'AutoLoginUser'
+    return [ordered]@{
+        'steam.exe'        = $(if ($proc.SteamPids.Count) { $proc.SteamPids -join ', ' } else { 'none' })
+        'pid'              = $(if ($proc.Pid) { "$($proc.Pid) ($(if ($proc.PidAlive) { 'alive' } else { 'dead' }))" } else { '0' })
+        'ActiveUser'       = (& $nameOf $activeUser)
+        'RunningAppID'     = "$(Get-DwordValue (Get-RegValue $SteamKey 'RunningAppID'))"
+        'AutoLoginUser'    = $(if ($auto.Exists) { "``$($auto.Value)``" } else { 'missing' })
+        'RememberPassword' = "$(Get-DwordValue (Get-RegValue $SteamKey 'RememberPassword'))"
+        'loginusers.vdf'   = $vdfText
+    }
+}
+
+if ($Watch) {
+    $steamDir = Resolve-SteamPath $SteamPath
+    $vdfPath = if ($steamDir) { Join-Path $steamDir 'config\loginusers.vdf' } else { $null }
+    $cache = @{ VdfTime = $null; Accounts = @() }
+    $prev = $null
+    $started = Get-Date
+    Write-Host "Watching Steam state every $IntervalMs ms, Ctrl+C to stop." -ForegroundColor Cyan
+    if ($Label) {
+        Add-ResultsText $ResultsPath ("## $Label (watch)`r`n`r`n_Started {0}, interval {1} ms, host {2}_`r`n`r`n" -f $started.ToString('yyyy-MM-dd HH:mm:ss'), $IntervalMs, $env:COMPUTERNAME)
+    }
+    try {
+        while ($true) {
+            $now = Get-Date
+            $snap = Get-WatchSnapshot $vdfPath $cache
+            $lines = @()
+            foreach ($k in $snap.Keys) {
+                if ($null -eq $prev) { $lines += "$k = $($snap[$k])" }
+                elseif ($prev[$k] -ne $snap[$k]) { $lines += "$k`: $($prev[$k]) -> $($snap[$k])" }
+            }
+            if ($lines) {
+                $stamp = '`{0}` (+{1:0.0} s)' -f $now.ToString('HH:mm:ss.fff'), ($now - $started).TotalSeconds
+                $md = @($lines | ForEach-Object { "- $stamp $_" })
+                $md | ForEach-Object { Write-Output $_ }
+                if ($Label) { Add-ResultsText $ResultsPath (($md -join "`r`n") + "`r`n") }
+            }
+            $prev = $snap
+            Start-Sleep -Milliseconds $IntervalMs
         }
     }
-    return $root
+    finally {
+        if ($Label) {
+            Add-ResultsText $ResultsPath ("- ``{0}`` stopped`r`n`r`n---`r`n`r`n" -f (Get-Date).ToString('HH:mm:ss.fff'))
+            Write-Host "Appended to $ResultsPath" -ForegroundColor Green
+        }
+    }
+    return
 }
 
 # ---------------------------------------------------------------------------
@@ -275,10 +309,6 @@ Emit ''
 $out | ForEach-Object { Write-Output $_ }
 
 if ($Label) {
-    $utf8 = New-Object System.Text.UTF8Encoding($false)
-    if (-not (Test-Path -LiteralPath $ResultsPath)) {
-        [IO.File]::WriteAllText($ResultsPath, "# M0 results`r`n`r`nGenerated by ``tools/m0-inspect.ps1``. See SPEC.md §5 and §10.`r`n`r`n", $utf8)
-    }
-    [IO.File]::AppendAllText($ResultsPath, (($out -join "`r`n") + "`r`n---`r`n`r`n"), $utf8)
+    Add-ResultsText $ResultsPath (($out -join "`r`n") + "`r`n---`r`n`r`n")
     Write-Host "Appended to $ResultsPath" -ForegroundColor Green
 }
