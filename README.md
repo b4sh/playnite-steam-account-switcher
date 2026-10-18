@@ -43,6 +43,8 @@ Optional, but recommended: if Playnite is set to close Steam after a game exits,
 
 Select one or more games, right-click → **Steam account** → choose an account. The current assignment is marked with ✓ (when a single game is selected). **Use default account** removes the assignment.
 
+![Steam account submenu in the game context menu](docs/images/context-menu.png)
+
 ### Start a game
 
 | Steam state | What happens |
@@ -59,6 +61,8 @@ Games without an assignment (and no default account) are not touched at all.
 
 The top panel item shows *Steam closed*, *Steam logging in…* or the profile name of the logged-in account, refreshed every few seconds. Click it to get the account list and switch manually.
 
+![Top panel item showing the Steam state](docs/images/top-panel.png)
+
 ### Settings
 
 *Add-ons → Extension settings → Generic → Steam Account Switcher*
@@ -73,6 +77,8 @@ The top panel item shows *Steam closed*, *Steam logging in…* or the profile na
 | Steam login timeout [s] | 60 |
 
 The settings page also lists the detected accounts and warns about accounts without a remembered password.
+
+![Add-on settings](docs/images/settings.png)
 
 ## How it works
 
