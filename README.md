@@ -13,6 +13,17 @@ A [Playnite](https://playnite.link) 10 add-on for people with more than one Stea
 - Works in both Desktop and Fullscreen mode.
 - English and Polish UI.
 
+## Scope
+
+The add-on has one job: switching Steam to the right account **before a game starts**. It does not touch Playnite's Steam integration at all. It doesn't log in to Steam, doesn't use Steam Web API keys and doesn't import games. It works the same whether or not the integration is logged in.
+
+- **Games from other accounts in your library**: this is handled by Playnite's built-in Steam integration. Without logging in, it scans your disk and adds installed games from all accounts. To also get uninstalled games from your other accounts, add them under **Additional Accounts** in the Steam integration settings.
+- **Which account owns a game**: Playnite doesn't know this, so you assign the account yourself (right-click → *Steam account*, works for many games at once).
+
+### Planned
+
+Picking the account automatically, based on which account last played the game. Steam stores this locally in each account's `userdata\<account>\config\localconfig.vdf` (`LastPlayed`), so it would still work without logging in anywhere.
+
 ## Requirements
 
 - Playnite 10 on Windows 10/11.
