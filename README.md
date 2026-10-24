@@ -58,7 +58,7 @@ Select one or more games, right-click → **Steam account** → choose an accoun
 
 Games without an assignment (and no default account) are not touched at all.
 
-With **Ask before start**, a window lists your accounts before the game starts, with the logged-in account focused. Choose an account (mouse, arrow keys + Enter, or a controller in Fullscreen mode) and the table above applies, without the extra "switch?" question. *Cancel start* (or Esc) cancels the game start and leaves Steam alone.
+With **Ask before start**, a window lists your accounts before the game starts, using Playnite's own dialog, so it follows your theme and works with a controller in Fullscreen mode. Choose an account and the table above applies, without the extra "switch?" question. *Cancel game start* cancels the game start and leaves Steam alone.
 
 ### Top panel
 

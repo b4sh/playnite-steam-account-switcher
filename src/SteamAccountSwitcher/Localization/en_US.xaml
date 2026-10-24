@@ -25,7 +25,7 @@
     <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam is logged in as {0}. Switch to {1}? Steam will restart.</sys:String>
     <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">On account {0} the game "{1}" is running. Closing Steam to switch to {2} will end it. Continue?</sys:String>
     <sys:String x:Key="LOCSAS_PickerHeader">Which Steam account should start "{0}"?</sys:String>
-    <sys:String x:Key="LOCSAS_PickerLoggedIn">logged in</sys:String>
+    <sys:String x:Key="LOCSAS_PickerLoggedIn">Steam is logged in to: {0}</sys:String>
     <sys:String x:Key="LOCSAS_ProgressSwitching">Switching Steam to {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Closing Steam (Steam Cloud sync may take a while)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Starting Steam as {0}…</sys:String>
