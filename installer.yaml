@@ -2,6 +2,13 @@
 # Add a new package entry at the top for every release.
 AddonId: 'SteamAccountSwitcher_386277e5-4f8d-4979-bf1f-09b635195a7b'
 Packages:
+  - Version: 1.1.0
+    RequiredApiVersion: 6.18.0
+    ReleaseDate: 2026-10-24
+    PackageUrl: https://github.com/b4sh/playnite-steam-account-switcher/releases/download/v1.1.0/SteamAccountSwitcher_386277e5-4f8d-4979-bf1f-09b635195a7b_1_1_0.pext
+    Changelog:
+      - New "Ask before start" option in the Steam account menu - pick the account every time the game starts.
+      - The account picker uses Playnite's themed dialog and works with a controller in Fullscreen mode (cancel button = cancel game start).
   - Version: 1.0.0
     RequiredApiVersion: 6.18.0
     ReleaseDate: 2026-10-17
