@@ -135,6 +135,15 @@ namespace SteamAccountSwitcher
             yield return new GameMenuItem
             {
                 MenuSection = section,
+                Description = LaunchTarget.IsAsk(assigned)
+                    ? "✓ " + ResourceProvider.GetString("LOCSAS_MenuAskBeforeStart")
+                    : ResourceProvider.GetString("LOCSAS_MenuAskBeforeStart"),
+                Action = _ => Assign(gameIds, LaunchTarget.AskMarker),
+            };
+
+            yield return new GameMenuItem
+            {
+                MenuSection = section,
                 Description = assigned == null && gameIds.Count == 1
                     ? "✓ " + ResourceProvider.GetString("LOCSAS_MenuUseDefault")
                     : ResourceProvider.GetString("LOCSAS_MenuUseDefault"),
@@ -151,35 +160,66 @@ namespace SteamAccountSwitcher
         public override void OnGameStarting(OnGameStartingEventArgs args)
         {
             var game = args.Game;
-            var target = store.Get(game.Id);
-            if (string.IsNullOrEmpty(target))
-            {
-                target = settings.Settings.DefaultAccount;
-            }
-
-            if (string.IsNullOrEmpty(target))
+            var target = LaunchTarget.Resolve(store.Get(game.Id), settings.Settings.DefaultAccount);
+            if (target.Kind == LaunchTargetKind.None)
             {
                 return;
             }
 
-            var outcome = RunExclusive(target, game.Id, $"game='{game.Name}'");
+            var source = $"game='{game.Name}'";
+            var askBeforeSwitch = settings.Settings.AskBeforeSwitch;
+            var accountName = target.AccountName;
+            if (target.Kind == LaunchTargetKind.Ask)
+            {
+                accountName = AskForAccount(game.Name, source);
+                if (accountName == null)
+                {
+                    args.CancelStartup = true;
+                    return;
+                }
+
+                // The user has just picked the account: don't ask "switch?" again.
+                askBeforeSwitch = false;
+            }
+
+            var outcome = RunExclusive(accountName, game.Id, askBeforeSwitch, source);
             if (outcome.Kind != LaunchOutcomeKind.Proceed)
             {
                 args.CancelStartup = true;
             }
         }
 
+        /// <summary>Shows the account picker (SPEC §7.5); null = start cancelled.</summary>
+        private string AskForAccount(string gameName, string source)
+        {
+            var steam = LocateSteam();
+            var accounts = steam == null ? new SteamAccount[0] : LoginUsersFile.Load(environment, steam.LoginUsersPath);
+            if (accounts.Count == 0)
+            {
+                Logger.Warn($"{source} ask: no Steam accounts found, start cancelled.");
+                PlayniteApi.Dialogs.ShowErrorMessage(
+                    steam == null ? ResourceProvider.GetString("LOCSAS_ErrorSteamNotFound") : ResourceProvider.GetString("LOCSAS_MenuNoAccountsDetails"),
+                    ResourceProvider.GetString("LOCSAS_PluginName"));
+                return null;
+            }
+
+            var state = SteamStateReader.Read(environment);
+            var chosen = PlayniteApi.MainView.UIDispatcher.Invoke(() => AccountPicker.Show(PlayniteApi, gameName, accounts, state));
+            Logger.Info(chosen == null ? $"{source} ask: cancelled by the user." : $"{source} ask: chose '{chosen.AccountName}'.");
+            return chosen?.AccountName;
+        }
+
         /// <summary>Manual switch from the top panel (SPEC §7.4); same flow as a game start, without asking first.</summary>
         internal void SwitchManually(string accountName)
         {
-            RunExclusive(accountName, null, "manual");
+            RunExclusive(accountName, null, false, "manual");
         }
 
         /// <summary>
         /// Runs one switch at a time, logs the outcome and shows errors. Returns Cancelled when another
         /// switch is already running.
         /// </summary>
-        private LaunchOutcome RunExclusive(string target, Guid? gameId, string source)
+        private LaunchOutcome RunExclusive(string target, Guid? gameId, bool askBeforeSwitch, string source)
         {
             if (System.Threading.Interlocked.CompareExchange(ref switching, 1, 0) != 0)
             {
@@ -190,7 +230,7 @@ namespace SteamAccountSwitcher
 
             try
             {
-                var outcome = PrepareSteam(gameId, target);
+                var outcome = PrepareSteam(gameId, target, askBeforeSwitch);
                 Logger.Info($"{source} target='{target}' outcome={outcome}");
                 if (outcome.Kind == LaunchOutcomeKind.Failed)
                 {
@@ -215,11 +255,9 @@ namespace SteamAccountSwitcher
         }
 
         /// <param name="gameId">The game being started (excluded from "running game" detection); null for a manual switch.</param>
-        private LaunchOutcome PrepareSteam(Guid? gameId, string target)
+        /// <param name="askBeforeSwitch">False when the user has just chosen the account explicitly (manual switch, picker).</param>
+        private LaunchOutcome PrepareSteam(Guid? gameId, string target, bool askBeforeSwitch)
         {
-            // A manual switch is an explicit choice: never ask "switch?" again.
-            var askBeforeSwitch = gameId != null && settings.Settings.AskBeforeSwitch;
-
             // Fresh account list for the decision; the menu cache may lag behind the watcher.
             var steam = LocateSteam();
             var accounts = steam == null ? new SteamAccount[0] : LoginUsersFile.Load(environment, steam.LoginUsersPath);
