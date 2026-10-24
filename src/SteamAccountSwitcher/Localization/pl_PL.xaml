@@ -9,6 +9,7 @@
 
     <!-- Menu kontekstowe gry -->
     <sys:String x:Key="LOCSAS_MenuSection">Konto Steam</sys:String>
+    <sys:String x:Key="LOCSAS_MenuAskBeforeStart">Zapytaj przed startem</sys:String>
     <sys:String x:Key="LOCSAS_MenuUseDefault">Użyj konta domyślnego</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccounts">Nie znaleziono kont Steam</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">W pliku loginusers.vdf Steama nie ma żadnych kont. Zaloguj się raz w Steamie na każde konto albo ustaw ścieżkę do Steama w ustawieniach dodatku.</sys:String>
@@ -23,6 +24,10 @@
     <!-- Start gry -->
     <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam jest zalogowany na {0}. Przełączyć na {1}? Steam zostanie uruchomiony ponownie.</sys:String>
     <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">Na koncie {0} działa gra „{1}”. Zamknięcie Steama w celu przełączenia na {2} ją zakończy. Kontynuować?</sys:String>
+    <sys:String x:Key="LOCSAS_PickerHeader">Na którym koncie Steam uruchomić „{0}”?</sys:String>
+    <sys:String x:Key="LOCSAS_PickerLoggedIn">Steam jest zalogowany na: {0}</sys:String>
+    <sys:String x:Key="LOCSAS_PickerMore">Więcej kont…</sys:String>
+    <sys:String x:Key="LOCSAS_PickerPage">Konta {0}–{1} z {2}</sys:String>
     <sys:String x:Key="LOCSAS_ProgressSwitching">Przełączanie Steama na konto {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Zamykanie Steama (może trwać synchronizacja Steam Cloud)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Uruchamianie Steama na koncie {0}…</sys:String>

@@ -46,6 +46,19 @@ namespace SteamAccountSwitcher.Core.Tests
         }
 
         [Fact]
+        public void Ask_marker_round_trips()
+        {
+            var store = new GameAccountStore(env, FilePath);
+            store.Assign(new[] { Game1 }, Decision.LaunchTarget.AskMarker);
+            store.Save();
+
+            var reloaded = new GameAccountStore(env, FilePath);
+            reloaded.Load();
+
+            Assert.Equal("?ask", reloaded.Get(Game1));
+        }
+
+        [Fact]
         public void Saved_json_matches_documented_format()
         {
             var store = new GameAccountStore(env, FilePath);

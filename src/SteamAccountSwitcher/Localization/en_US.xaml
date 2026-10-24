@@ -9,6 +9,7 @@
 
     <!-- Game context menu -->
     <sys:String x:Key="LOCSAS_MenuSection">Steam account</sys:String>
+    <sys:String x:Key="LOCSAS_MenuAskBeforeStart">Ask before start</sys:String>
     <sys:String x:Key="LOCSAS_MenuUseDefault">Use default account</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccounts">No Steam accounts found</sys:String>
     <sys:String x:Key="LOCSAS_MenuNoAccountsDetails">No accounts were found in Steam's loginusers.vdf. Log in to each account in Steam once, or set the Steam path in the add-on settings.</sys:String>
@@ -23,6 +24,10 @@
     <!-- Launch -->
     <sys:String x:Key="LOCSAS_ConfirmSwitch">Steam is logged in as {0}. Switch to {1}? Steam will restart.</sys:String>
     <sys:String x:Key="LOCSAS_ConfirmSwitchGameRunning">On account {0} the game "{1}" is running. Closing Steam to switch to {2} will end it. Continue?</sys:String>
+    <sys:String x:Key="LOCSAS_PickerHeader">Which Steam account should start "{0}"?</sys:String>
+    <sys:String x:Key="LOCSAS_PickerLoggedIn">Steam is logged in to: {0}</sys:String>
+    <sys:String x:Key="LOCSAS_PickerMore">More accounts…</sys:String>
+    <sys:String x:Key="LOCSAS_PickerPage">Accounts {0}–{1} of {2}</sys:String>
     <sys:String x:Key="LOCSAS_ProgressSwitching">Switching Steam to {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Closing Steam (Steam Cloud sync may take a while)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Starting Steam as {0}…</sys:String>

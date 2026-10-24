@@ -9,6 +9,7 @@ A [Playnite](https://playnite.link) 10 add-on for people with more than one Stea
 - **Safe with running games**: if a Steam game is running on the current account, you are asked before Steam is closed.
 - **Never kills Steam**: Steam is always closed with `steam.exe -shutdown`, so Steam Cloud can finish syncing your saves. If closing or logging in takes longer than the timeout, you can choose to keep waiting or cancel the game start.
 - **Top panel**: shows the account Steam is logged into (Steam icon + profile name). Click it to switch accounts manually.
+- **Ask before start**: for games you play on more than one account, pick the account each time the game starts.
 - **Default account** for games without an assignment (optional).
 - Works in both Desktop and Fullscreen mode.
 - English and Polish UI.
@@ -41,7 +42,7 @@ Optional, but recommended: if Playnite is set to close Steam after a game exits,
 
 ### Assign accounts
 
-Select one or more games, right-click → **Steam account** → choose an account. The current assignment is marked with ✓ (when a single game is selected). **Use default account** removes the assignment.
+Select one or more games, right-click → **Steam account** → choose an account. The current assignment is marked with ✓ (when a single game is selected). **Ask before start** shows an account picker every time the game starts. **Use default account** removes the assignment.
 
 ![Steam account submenu in the game context menu](docs/images/context-menu.png)
 
@@ -56,6 +57,8 @@ Select one or more games, right-click → **Steam account** → choose an accoun
 | Running on another account **with a game running** | You are asked first; *No* cancels the game start and leaves Steam alone |
 
 Games without an assignment (and no default account) are not touched at all.
+
+With **Ask before start**, a window lists your accounts before the game starts, with the logged-in account preselected. It uses Playnite's own dialog, so it follows your theme and works with a controller in Fullscreen mode; if the accounts don't fit, *More accounts…* shows the next ones. Choose an account and the table above applies, without the extra "switch?" question. *Cancel game start* (in Fullscreen mode: the controller's cancel button) cancels the game start and leaves Steam alone.
 
 ### Top panel
 
