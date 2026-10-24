@@ -28,7 +28,6 @@
     <sys:String x:Key="LOCSAS_PickerLoggedIn">Steam jest zalogowany na: {0}</sys:String>
     <sys:String x:Key="LOCSAS_PickerMore">Więcej kont…</sys:String>
     <sys:String x:Key="LOCSAS_PickerPage">Konta {0}–{1} z {2}</sys:String>
-    <sys:String x:Key="LOCSAS_PickerCancelHint">{0} = anuluj start gry</sys:String>
     <sys:String x:Key="LOCSAS_ProgressSwitching">Przełączanie Steama na konto {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Zamykanie Steama (może trwać synchronizacja Steam Cloud)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Uruchamianie Steama na koncie {0}…</sys:String>

@@ -88,11 +88,6 @@ namespace SteamAccountSwitcher
                         text += "\n(!) = " + ResourceProvider.GetString("LOCSAS_NoRememberedPasswordShort");
                     }
 
-                    if (!desktop)
-                    {
-                        text += "\n" + string.Format(ResourceProvider.GetString("LOCSAS_PickerCancelHint"), CancelButton(api));
-                    }
-
                     openOwner = owner;
                     var result = api.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, options);
                     openOwner = null;
