@@ -8,7 +8,14 @@ namespace SteamAccountSwitcher.Core.Decision
     /// </summary>
     public static class AccountPaging
     {
-        public const int PageSize = 3;
+        /// <summary>
+        /// Buttons per message box, Cancel included. Fullscreen lays them out in one horizontal row inside a fixed-size box
+        /// (min. 150 px each in the default theme); 5 buttons didn't fit in testing (2026-10-24).
+        /// </summary>
+        public const int MaxButtons = 4;
+
+        /// <summary>Accounts per page when paging: room is left for "More accounts…" and Cancel.</summary>
+        public const int PageSize = MaxButtons - 2;
 
         /// <summary>Up to PageSize + 1 accounts fit on one page: the "More" slot isn't needed then.</summary>
         public static int PageCount(int total) =>

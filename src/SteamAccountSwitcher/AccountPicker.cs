@@ -40,7 +40,18 @@ namespace SteamAccountSwitcher
                         missingPassword = true;
                     }
 
-                    var option = new MessageBoxOption(escape ? SteamAccountSwitcherPlugin.EscapeAccessKeys(label) : label, i == preferred, false);
+                    if (escape)
+                    {
+                        label = SteamAccountSwitcherPlugin.EscapeAccessKeys(label);
+                    }
+
+                    // Playnite treats option titles starting with "LOC" as localization keys; a zero-width space prevents that.
+                    if (label.StartsWith("LOC", System.StringComparison.Ordinal))
+                    {
+                        label = "​" + label;
+                    }
+
+                    var option = new MessageBoxOption(label, i == preferred, false);
                     options.Add(option);
                     byOption[option] = account;
                 }
