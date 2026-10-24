@@ -28,6 +28,7 @@
     <sys:String x:Key="LOCSAS_PickerLoggedIn">Steam is logged in to: {0}</sys:String>
     <sys:String x:Key="LOCSAS_PickerMore">More accounts…</sys:String>
     <sys:String x:Key="LOCSAS_PickerPage">Accounts {0}–{1} of {2}</sys:String>
+    <sys:String x:Key="LOCSAS_PickerCancelHint">{0} = cancel game start</sys:String>
     <sys:String x:Key="LOCSAS_ProgressSwitching">Switching Steam to {0}…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressShuttingDown">Closing Steam (Steam Cloud sync may take a while)…</sys:String>
     <sys:String x:Key="LOCSAS_ProgressStarting">Starting Steam as {0}…</sys:String>

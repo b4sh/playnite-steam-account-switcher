@@ -77,6 +77,9 @@ namespace SteamAccountSwitcher
             yield return topPanel.Item;
         }
 
+        // Fullscreen message boxes ignore the controller's cancel button (SPEC §7.5).
+        public override void OnControllerButtonStateChanged(OnControllerButtonStateChangedArgs args) => AccountPicker.HandleControllerButton(PlayniteApi, args);
+
         public override ISettings GetSettings(bool firstRunSettings) => settings;
 
         public override UserControl GetSettingsView(bool firstRunSettings) => new SteamAccountSwitcherSettingsView();
