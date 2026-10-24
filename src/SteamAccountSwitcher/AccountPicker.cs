@@ -1,139 +1,81 @@
 using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using Playnite.SDK;
-using Playnite.SDK.Events;
 using SteamAccountSwitcher.Core.Decision;
 using SteamAccountSwitcher.Core.Steam;
 
 namespace SteamAccountSwitcher
 {
     /// <summary>
-    /// "Ask before start" window (SPEC §7.5): a vertical list of account buttons plus Cancel, styled by the active theme.
-    /// Controller: Playnite sends D-pad/stick directions to the active window as arrow keys, but confirm/cancel buttons
-    /// only reach its own windows, so the plugin forwards them via <see cref="HandleControllerButton"/>.
-    /// UI thread only.
+    /// "Ask before start" (SPEC §7.5): Playnite's message box with one option per account, paged
+    /// (<see cref="AccountPaging"/>) because the options are laid out in one row. The built-in dialog is styled by
+    /// the active theme and supports a controller in Fullscreen mode.
     /// </summary>
-    internal sealed class AccountPicker
+    internal static class AccountPicker
     {
-        private static AccountPicker current;
-
-        private readonly Window window;
-        private readonly bool swapConfirmCancel;
-        private SteamAccount chosen;
-
-        private AccountPicker(IPlayniteAPI api, string gameName, IReadOnlyList<SteamAccount> accounts, SteamState steam)
-        {
-            swapConfirmCancel = api.ApplicationInfo.Mode == ApplicationMode.Fullscreen
-                && api.ApplicationSettings.Fullscreen.SwapConfirmCancelButtons;
-
-            window = api.Dialogs.CreateWindow(new WindowCreationOptions
-            {
-                ShowCloseButton = true,
-                ShowMaximizeButton = false,
-                ShowMinimizeButton = false,
-            });
-            window.Owner = api.Dialogs.GetCurrentAppWindow();
-            window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            window.SizeToContent = SizeToContent.WidthAndHeight;
-            window.ResizeMode = ResizeMode.NoResize;
-            window.Title = ResourceProvider.GetString("LOCSAS_PluginName");
-
-            var panel = new StackPanel { Margin = new Thickness(20), MinWidth = 360 };
-            KeyboardNavigation.SetDirectionalNavigation(panel, KeyboardNavigationMode.Cycle);
-            KeyboardNavigation.SetTabNavigation(panel, KeyboardNavigationMode.Cycle);
-
-            panel.Children.Add(Text(string.Format(ResourceProvider.GetString("LOCSAS_PickerHeader"), gameName), new Thickness(0, 0, 0, 6)));
-            panel.Children.Add(Text(CurrentAccountText(accounts, steam), new Thickness(0, 0, 0, 14)));
-
-            var buttons = new List<Button>();
-            foreach (var account in accounts)
-            {
-                var label = account.RememberPassword
-                    ? account.DisplayName
-                    : account.DisplayName + " – " + ResourceProvider.GetString("LOCSAS_NoRememberedPasswordShort");
-                var button = NewButton(label);
-                button.Margin = new Thickness(0, 0, 0, 6);
-                button.HorizontalAlignment = HorizontalAlignment.Stretch;
-                button.HorizontalContentAlignment = HorizontalAlignment.Left;
-                var target = account;
-                button.Click += (s, e) =>
-                {
-                    chosen = target;
-                    window.DialogResult = true;
-                };
-                buttons.Add(button);
-                panel.Children.Add(button);
-            }
-
-            var cancel = NewButton(ResourceProvider.GetString("LOCSAS_ButtonCancelStart"));
-            cancel.IsCancel = true;
-            cancel.Margin = new Thickness(0, 14, 0, 0);
-            cancel.HorizontalAlignment = HorizontalAlignment.Right;
-            panel.Children.Add(cancel);
-
-            window.Content = new ScrollViewer
-            {
-                Content = panel,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                MaxHeight = SystemParameters.WorkArea.Height * 0.8,
-            };
-
-            var preferred = LaunchTarget.PreferredIndex(accounts, steam);
-            window.Loaded += (s, e) => (preferred >= 0 ? buttons[preferred] : cancel).Focus();
-        }
-
-        /// <summary>The chosen account, or null when the user cancelled.</summary>
+        /// <summary>The chosen account, or null when the user cancelled. Must be called on the UI thread.</summary>
         public static SteamAccount Show(IPlayniteAPI api, string gameName, IReadOnlyList<SteamAccount> accounts, SteamState steam)
         {
-            var picker = new AccountPicker(api, gameName, accounts, steam);
-            current = picker;
-            try
+            var preferred = LaunchTarget.PreferredIndex(accounts, steam);
+
+            // Desktop buttons treat "_" as an access-key marker; Fullscreen buttons show it literally.
+            var escape = api.ApplicationInfo.Mode == ApplicationMode.Desktop;
+            var total = accounts.Count;
+            var page = AccountPaging.PageOf(preferred, total);
+            var caption = ResourceProvider.GetString("LOCSAS_PluginName");
+            while (true)
             {
-                return picker.window.ShowDialog() == true ? picker.chosen : null;
-            }
-            finally
-            {
-                current = null;
+                var start = AccountPaging.Start(total, page);
+                var count = AccountPaging.Count(total, page);
+                var options = new List<MessageBoxOption>();
+                var byOption = new Dictionary<MessageBoxOption, SteamAccount>();
+                var missingPassword = false;
+                for (var i = start; i < start + count; i++)
+                {
+                    var account = accounts[i];
+                    var label = string.IsNullOrEmpty(account.PersonaName) ? account.AccountName : account.PersonaName;
+                    if (!account.RememberPassword)
+                    {
+                        label += " (!)";
+                        missingPassword = true;
+                    }
+
+                    var option = new MessageBoxOption(escape ? SteamAccountSwitcherPlugin.EscapeAccessKeys(label) : label, i == preferred, false);
+                    options.Add(option);
+                    byOption[option] = account;
+                }
+
+                MessageBoxOption more = null;
+                if (AccountPaging.HasMore(total))
+                {
+                    more = new MessageBoxOption(ResourceProvider.GetString("LOCSAS_PickerMore"), false, false);
+                    options.Add(more);
+                }
+
+                options.Add(new MessageBoxOption(ResourceProvider.GetString("LOCSAS_ButtonCancelStart"), false, true));
+
+                var text = string.Format(ResourceProvider.GetString("LOCSAS_PickerHeader"), gameName)
+                    + "\n\n" + CurrentAccountText(accounts, steam);
+                if (AccountPaging.HasMore(total))
+                {
+                    text += "\n" + string.Format(ResourceProvider.GetString("LOCSAS_PickerPage"), start + 1, start + count, total);
+                }
+
+                if (missingPassword)
+                {
+                    text += "\n(!) = " + ResourceProvider.GetString("LOCSAS_NoRememberedPasswordShort");
+                }
+
+                var result = api.Dialogs.ShowMessage(text, caption, MessageBoxImage.Question, options);
+                if (result != null && result == more)
+                {
+                    page++;
+                    continue;
+                }
+
+                return result != null && byOption.TryGetValue(result, out var chosen) ? chosen : null;
             }
         }
-
-        /// <summary>Controller confirm clicks the focused button, cancel closes the picker. No-op when no picker is open.</summary>
-        public static void HandleControllerButton(OnControllerButtonStateChangedArgs args)
-        {
-            var picker = current;
-            if (picker == null || args.State != ControllerInputState.Pressed || !picker.window.IsActive)
-            {
-                return;
-            }
-
-            var confirm = picker.swapConfirmCancel ? ControllerInput.B : ControllerInput.A;
-            var cancel = picker.swapConfirmCancel ? ControllerInput.A : ControllerInput.B;
-            if (args.Button == confirm)
-            {
-                (Keyboard.FocusedElement as ButtonBase)?.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-            }
-            else if (args.Button == cancel)
-            {
-                picker.window.DialogResult = false;
-            }
-        }
-
-        private static TextBlock Text(string text, Thickness margin)
-        {
-            var block = new TextBlock { Text = text, TextWrapping = TextWrapping.Wrap, MaxWidth = 520, Margin = margin };
-            block.SetResourceReference(TextBlock.ForegroundProperty, "TextBrush");
-            return block;
-        }
-
-        // TextBlock content: a plain string would treat "_" in logins as an access-key marker in some themes.
-        private static Button NewButton(string label) => new Button
-        {
-            Content = new TextBlock { Text = label },
-            Padding = new Thickness(14, 8, 14, 8),
-        };
 
         private static string CurrentAccountText(IReadOnlyList<SteamAccount> accounts, SteamState steam)
         {

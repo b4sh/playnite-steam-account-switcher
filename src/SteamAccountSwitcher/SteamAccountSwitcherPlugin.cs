@@ -77,11 +77,6 @@ namespace SteamAccountSwitcher
             yield return topPanel.Item;
         }
 
-        // Controller confirm/cancel never reach plugin windows on their own (SPEC §7.5).
-        public override void OnControllerButtonStateChanged(OnControllerButtonStateChangedArgs args) => AccountPicker.HandleControllerButton(args);
-
-        public override void OnDesktopControllerButtonStateChanged(OnControllerButtonStateChangedArgs args) => AccountPicker.HandleControllerButton(args);
-
         public override ISettings GetSettings(bool firstRunSettings) => settings;
 
         public override UserControl GetSettingsView(bool firstRunSettings) => new SteamAccountSwitcherSettingsView();
