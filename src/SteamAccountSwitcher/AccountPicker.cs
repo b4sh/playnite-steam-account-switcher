@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using Playnite.SDK;
 using SteamAccountSwitcher.Core.Decision;
 using SteamAccountSwitcher.Core.Steam;
@@ -23,8 +25,14 @@ namespace SteamAccountSwitcher
             var total = accounts.Count;
             var page = AccountPaging.PageOf(preferred, total);
             var caption = ResourceProvider.GetString("LOCSAS_PluginName");
-            while (true)
+            var owner = ActiveWindow();
+            for (var first = true; ; first = false)
             {
+                if (!first)
+                {
+                    ReactivateOwner(owner);
+                }
+
                 var start = AccountPaging.Start(total, page);
                 var count = AccountPaging.Count(total, page);
                 var options = new List<MessageBoxOption>();
@@ -86,6 +94,25 @@ namespace SteamAccountSwitcher
 
                 return result != null && byOption.TryGetValue(result, out var chosen) ? chosen : null;
             }
+        }
+
+        private static Window ActiveWindow() =>
+            Application.Current?.Windows.OfType<Window>().LastOrDefault(w => w.IsActive) ?? Application.Current?.MainWindow;
+
+        /// <summary>
+        /// Playnite gives a new message box the *active* window as owner and sends controller input there. Right after
+        /// the previous page closes no window is active yet, so the next page would lose the controller: re-activate the
+        /// original window and let the dispatcher process the activation first.
+        /// </summary>
+        private static void ReactivateOwner(Window owner)
+        {
+            if (owner == null || !owner.IsLoaded)
+            {
+                return;
+            }
+
+            owner.Activate();
+            owner.Dispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
         }
 
         private static string CurrentAccountText(IReadOnlyList<SteamAccount> accounts, SteamState steam)
